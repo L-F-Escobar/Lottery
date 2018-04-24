@@ -17,10 +17,10 @@ contract Lottery {
     function enter() public payable {
         require(fee <= msg.value);
         
-        /// @dev Return any change owned.
-        if (fee < msg.value) {
-            msg.sender.transfer(msg.value-fee);
-        }
+        // /// @dev Return any change owned.
+        // if (fee < msg.value) {
+        //     msg.sender.transfer(msg.value-fee);
+        // }
 
         players.push(msg.sender);
     }

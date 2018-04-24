@@ -4,17 +4,16 @@ const Web3 = require('web3');/// @dev Constructor function always have capital l
 
 const provider = ganache.provider();
 const web3 = new Web3(provider);
-// const web3 = new Web3(ganache.provider());
 
 const { interface, bytecode } = require('../compile');
 
 let accounts;
 let lottery;
 
+console.log('Web3 version:', web3.version);
+
 /// @dev Async await combo instead of promises.
 beforeEach(async () => {
-    console.log('Web3 version:', web3.version);
-
     /// @dev accounts will contain a list of all our eth accounts.
     accounts = await web3.eth.getAccounts();
 
@@ -28,7 +27,6 @@ beforeEach(async () => {
 });
 
 describe('Contract lottery', () => {
-
     /// @dev Ensure the contract is deployed.
     it('delpoys a contract', () => {
         // console.log(web3.eth.getAccounts());
@@ -85,12 +83,39 @@ describe('Contract lottery', () => {
             // @dev Make sure there is an error present.
             assert(err);
         }
-        
+    });
 
+
+    /// @dev Ensure that only the owner of the contract can pick a winner.
+    it('only manager can call pickWinner', async () => {
+        /// @dev There should be an error thrown due to onlyOwner modifier.
+        try {
+            await lottery.methods.pickWinner().send({ from: accounts[1],
+                                                      value: web3.utils.toWei('.001', 'ether') 
+            });
+            assert(false);
+        } catch (err) {
+            assert(err);
+        }
+    });
+
+
+    /// @dev End to end contract run through.
+    it('send money to winner and reset player array', async () => {
+        await lottery.methods.enter().send({ from: accounts[0], 
+                                              value: web3.utils.toWei('2', 'ether')
+        });
+
+        const initialBalance = await web3.eth.getBalance(accounts[0]);
+
+        await lottery.methods.pickWinner().send({ from: accounts[0] });
+
+        const finalBalance = await web3.eth.getBalance(accounts[0]);
+
+        const difference = finalBalance - initialBalance;
+
+        // console.log(finalBalance - initialBalance);
+
+        assert(difference > web3.utils.toWei('1.8', 'ether'));
     });
 });
-
-// /// @dev 
-// it('can change the message', async () => {
-
-// });
