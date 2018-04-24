@@ -4,101 +4,118 @@ const Web3 = require('web3');/// @dev Constructor function always have capital l
 
 const provider = ganache.provider();
 const web3 = new Web3(provider);
-// const web3 = new Web3(ganache.provider());
 
 const { interface, bytecode } = require('../compile');
 
 let accounts;
-let inbox;
-const INITIAL_STRING = "Hello World!";
-const NEW_STRING = "Changed message."
+let lottery;
+
+console.log('Web3 version:', web3.version);
 
 /// @dev Async await combo instead of promises.
 beforeEach(async () => {
-    // // Get a list of all accounts - promises
-    // web3.eth.getAccounts()
-    //     .then(fetchedAccounts => {
-    //         console.log(fetchedAccounts);
-    //     });
-
-    console.log('Web3 -v:', web3.version);
-
     /// @dev accounts will contain a list of all our eth accounts.
     accounts = await web3.eth.getAccounts();
 
     /// @dev Accessing the Contract property - contructor which allows us to either intrerface with existing contracts or create/deploy new contracts.
-    /// @variable inbox - a javascript object repersentation of the contract we can interact with. Represents what exists on the actual eth blockchain.
-    inbox = await new web3.eth.Contract(JSON.parse(interface))
+    /// @variable lottery - a javascript object repersentation of the contract we can interact with. Represents what exists on the actual eth blockchain.
+    lottery = await new web3.eth.Contract(JSON.parse(interface))
         /// @dev Pass in bytecode & inital contract argument(s).
-        .deploy({ data: bytecode, arguments: [INITIAL_STRING] })
+        .deploy({ data: bytecode})
         .send({ from: accounts[0], gas: '1000000' })
-    inbox.setProvider(provider);
-
+    lottery.setProvider(provider);
 });
 
-describe('Contract Inbox', () => {
-
+describe('Contract lottery', () => {
     /// @dev Ensure the contract is deployed.
     it('delpoys a contract', () => {
-        assert.ok(inbox.options.address);
+        // console.log(web3.eth.getAccounts());
+        assert.ok(lottery.options.address);
     });
 
-    // /// @dev Print the js contract object.
-    // it('Js object contract', () => {
-    //     // console.log(inbox);
-    //     console.log('_');
-    // });
 
-    /// @dev Ensure the initial message is properly set.
-    it('has a default message', async () => {
-        /// @dev inbox - instance of a contract that exists on the blockchain.
-        /// @dev contract has a property called methods. 'console.log(inbox);'
-        /// @notice Methods is an object that contains all of the different public functions that exists in our contract.
-        /// @dev We are referencing the message property here.
-        const message = await inbox.methods.message().call();
-        /// @dev We are referencing the setMessage property here.
-        // const message = await inbox.methods.setMessage().call();
-        assert.equal(message, INITIAL_STRING);
-      });
+    /// @dev Ensure a user can enter the lottery.
+    it('allows one account to enter', async () => {
+        await lottery.methods.enter().send({ from: accounts[0], 
+                                             value: web3.utils.toWei('.0011', 'ether')
+        });
 
-      /// @dev Print the js contract object.
-    it('can change the message', async () => {
-        await inbox.methods.setMessage(NEW_STRING).send({ from: accounts[0] });
+        const players = await lottery.methods.getPlayers().call({ from: accounts[0] });
 
-        const message = await inbox.methods.message().call();
-        
-        assert.equal(message, NEW_STRING);
+        assert.equal(accounts[0], players[0]);
+        assert.equal(1, players.length);
+    });
+
+
+    /// @dev Ensure multiple users can enter the lottery.
+    it('allows multiple account to enter', async () => {
+        await lottery.methods.enter().send({ from: accounts[0], 
+                                             value: web3.utils.toWei('.0011', 'ether')
+        });
+
+        await lottery.methods.enter().send({ from: accounts[1], 
+            value: web3.utils.toWei('.0011', 'ether')
+        });
+
+        await lottery.methods.enter().send({ from: accounts[2], 
+            value: web3.utils.toWei('.0011', 'ether')
+        });
+
+        const players = await lottery.methods.getPlayers().call({ from: accounts[0] });
+
+        assert.equal(accounts[0], players[0]);
+        assert.equal(accounts[1], players[1]);
+        assert.equal(accounts[2], players[2]);
+        assert.equal(3, players.length);
+    });
+
+
+    /// @dev Ensure minimum fee is met.
+    it('requires minimum ether to enter', async () => {
+        /// @dev There should be an error thrown due to insufficient fee.
+        try {
+            await lottery.methods.enter().send({ from: accounts[0],
+                                                 value: web3.utils.toWei('.0001', 'ether') 
+            });
+            /// @dev If no error is thrown in try, fail the test.
+            assert(false);
+        } catch (err) {
+            // @dev Make sure there is an error present.
+            assert(err);
+        }
+    });
+
+
+    /// @dev Ensure that only the owner of the contract can pick a winner.
+    it('only manager can call pickWinner', async () => {
+        /// @dev There should be an error thrown due to onlyOwner modifier.
+        try {
+            await lottery.methods.pickWinner().send({ from: accounts[1],
+                                                      value: web3.utils.toWei('.001', 'ether') 
+            });
+            assert(false);
+        } catch (err) {
+            assert(err);
+        }
+    });
+
+
+    /// @dev End to end contract run through.
+    it('send money to winner and reset player array', async () => {
+        await lottery.methods.enter().send({ from: accounts[0], 
+                                              value: web3.utils.toWei('2', 'ether')
+        });
+
+        const initialBalance = await web3.eth.getBalance(accounts[0]);
+
+        await lottery.methods.pickWinner().send({ from: accounts[0] });
+
+        const finalBalance = await web3.eth.getBalance(accounts[0]);
+
+        const difference = finalBalance - initialBalance;
+
+        // console.log(finalBalance - initialBalance);
+
+        assert(difference > web3.utils.toWei('1.8', 'ether'));
     });
 });
-
-
-
-
-
-
-// class Car {
-//     park() {
-//         return 'stopped';
-//     }
-
-//     drive() {
-//         return 'vroom';
-//     }
-// }
-
-
-// let car;
-
-// beforeEach(() => {
-//     car = new Car();
-// });
-
-// describe('Car', () => {
-//     it('can park', () => {
-//         assert.equal(car.park(), 'stopped');
-//     });
-
-//     it('can drive', () => {
-//         assert.equal(car.drive(), "vroom");
-//     });
-// });

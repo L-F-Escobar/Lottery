@@ -2,7 +2,7 @@ pragma solidity ^0.4.17;
 
 contract Lottery {
     address public manager;
-    address [] players;
+    address[] players;
     uint fee = .001 ether;
     
     modifier onlyOwner() {
@@ -14,14 +14,14 @@ contract Lottery {
         manager = msg.sender;
     }
     
-    function enter(address _player) public payable {
+    function enter() public payable {
         require(fee <= msg.value);
         
-        /// @dev Return any change owned.
-        if (fee < msg.value) {
-            msg.sender.transfer(msg.value-fee);
-        }
-        
+        // /// @dev Return any change owned.
+        // if (fee < msg.value) {
+        //     msg.sender.transfer(msg.value-fee);
+        // }
+
         players.push(msg.sender);
     }
     
