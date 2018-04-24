@@ -4,7 +4,8 @@
   "description": "Udemy course; Ethereum and Solidity: The Complete Developer's Guide",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "setup": "npm install --save ganach-cli web3@1.0.0-beta.29 mocha"
   },
   "repository": {
     "type": "git",
