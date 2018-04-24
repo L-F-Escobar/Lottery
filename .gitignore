@@ -1,0 +1,11 @@
+# .gitignore
+
+# Database
+data.json
+
+# Build Files
+build/
+dist/
+
+# Dependencies
+node_modules/

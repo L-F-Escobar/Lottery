@@ -1,0 +1,51 @@
+SECTION ONE
+
+
+Smart Contract is an address on the ethereum network which is controlled by code.
+Smart Contract properties:
+    1. balance - Amount of ether this account owns.
+    2. storage - Data storage for this contract.
+    3. code - Raw machine code for this contract.
+
+Smart Contract Pipeline
+    -> Contract Definition
+    -> Solidity Compiler
+    -> Compiler produces 2 files
+        1) Byte Code : This is the actual byte code that will be deployed to the Ethereum Network. This stuff gets stuffed into our contract account.
+        2) Application Binary Interface (ABI) : Essentially an API. Key for writing applications that can interact with the deployed smart contact.
+
+The Storate Variables of a smart contract can be seen like instance variables in C++. Pet class w/ public variables name & petType. That is what a Storage Variable is. 
+
+Function Types
+    1) public : Anyone can call this function. Exclusive with Private.
+    2) private : Only this contract can call this function. Exclusive with Public.
+    3) view : This function returns data and does not modify the contracts data.       
+    4) constant : This function returns data and does not modify the contracts data.    
+    5) pure : Function will not modify or even read the contracts data.
+    6) payable : When someone calls this function they might send ether along.
+
+Changing anything on the blockchain means we must submit a Transaction.
+
+CALL cannot modifiy the contract state.
+SEND can modify the contract state.
+
+gasPrice : Amount of WEI the sender is willing to pay per unit gas to get this transaction processed.
+startGas/gasLimit : Units of gas that this transaction can consume.
+
+
+SECTION TWO
+
+
+
+Mocha functions
+1) it - runs a test and make an assertion.
+2) describe - Groups together 'it' functions.
+3) beforeEach - Execute some general setup code.
+
+
+We can use Web3 to create new contracts but also to interact with existing deployed contracts as well. 
+To interacte with an existing contract we need the ABI & the address of the deployed contract.
+To deloy a new contract we need the ABI & the Bytecode.
+
+
+
